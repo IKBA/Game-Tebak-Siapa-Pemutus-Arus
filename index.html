@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siapa Pemutus Arus? - Teka-Teki Fisika Rangkaian Listrik</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background Animated Stars/Snow Canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="app-container">
+        <!-- Header Section -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-bolt-lightning glow-icon"></i>
+                </div>
+                <div>
+                    <h1>Siapa Pemutus Arus?</h1>
+                    <p class="subtitle">Teka-Teki Logika Rangkaian Listrik Lampu Hias &bull; Fisika Kelas 12</p>
+                </div>
+            </div>
+
+            <div class="header-controls">
+                <button id="btn-sound" class="icon-btn" title="Aktifkan/Matikan Suara">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+                <button id="btn-theory" class="btn btn-secondary">
+                    <i class="fa-solid fa-book-open"></i> Panduan Teori
+                </button>
+                <button id="btn-sandbox-toggle" class="btn btn-accent">
+                    <i class="fa-solid fa-flask"></i> Mode Lab Bebas
+                </button>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs for Levels -->
+        <nav class="level-nav">
+            <button class="level-tab active" data-level="1">
+                <span class="tab-num">01</span>
+                <span class="tab-label">Seri Murni</span>
+            </button>
+            <button class="level-tab" data-level="2">
+                <span class="tab-num">02</span>
+                <span class="tab-label">Paralel Cabang</span>
+            </button>
+            <button class="level-tab" data-level="3">
+                <span class="tab-num">03</span>
+                <span class="tab-label">Campuran Hias</span>
+            </button>
+            <button class="level-tab" data-level="4">
+                <span class="tab-num">04</span>
+                <span class="tab-label">Matriks Bintang</span>
+            </button>
+            <button class="level-tab" data-level="5">
+                <span class="tab-num">05</span>
+                <span class="tab-label">Time Attack</span>
+            </button>
+            <button class="level-tab sandbox-tab" data-level="sandbox">
+                <span class="tab-num"><i class="fa-solid fa-vial"></i></span>
+                <span class="tab-label">Lab Bebas</span>
+            </button>
+        </nav>
+
+        <!-- Main Workspace -->
+        <main class="main-workspace">
+            <!-- Left Panel: Mission & Metrics -->
+            <aside class="sidebar-panel">
+                <!-- Mission Card -->
+                <div class="card mission-card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-bullseye card-icon text-gold"></i>
+                        <h2>Target Misi Level <span id="current-level-num">1</span></h2>
+                    </div>
+                    <div class="card-body">
+                        <h3 id="mission-title" class="mission-title">Padamkan Seluruh Rangkaian!</h3>
+                        <p id="mission-desc" class="mission-desc">
+                            Temukan lampu pemutus arus utama. Melepas lampu yang tepat akan membuat seluruh rangkaian mati total!
+                        </p>
+
+                        <div class="mission-target-box">
+                            <span class="target-label">Target Kondisi Lampu:</span>
+                            <div id="target-badges" class="target-badges">
+                                <!-- Dynamic badges generated in JS -->
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button id="btn-check" class="btn btn-primary btn-block">
+                                <i class="fa-solid fa-circle-check"></i> Uji Hasil Pemutusan
+                            </button>
+                            <button id="btn-reset" class="btn btn-outline btn-block">
+                                <i class="fa-solid fa-rotate-left"></i> Pasang Semua Lampu
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Physics Gauge Card -->
+                <div class="card metrics-card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-gauge-high card-icon text-cyan"></i>
+                        <h2>Pengukur Listrik (Multimeter)</h2>
+                    </div>
+                    <div class="card-body grid-metrics">
+                        <div class="metric-box">
+                            <span class="metric-title">Tegangan (<i>V</i>)</span>
+                            <span id="metric-voltage" class="metric-value text-gold">12.0 V</span>
+                            <small class="metric-sub">Baterai Utama</small>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-title">Hambatan Total (<i>R</i><sub>eq</sub>)</span>
+                            <span id="metric-resistance" class="metric-value text-cyan">40.0 Ω</span>
+                            <small class="metric-sub">Ekuivalen Rangkaian</small>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-title">Arus Utama (<i>I</i>)</span>
+                            <span id="metric-current" class="metric-value text-green">0.30 A</span>
+                            <small class="metric-sub"><i>I</i> = <i>V</i> / <i>R</i><sub>eq</sub></small>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-title">Status Loop</span>
+                            <span id="metric-status" class="metric-value text-emerald">TERTUTUP</span>
+                            <small class="metric-sub">LUP UTAMA</small>
+                        </div>
+                    </div>
+
+                    <div class="visualizer-toggle-box">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-current-vision" checked>
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="toggle-label"><i class="fa-solid fa-eye"></i> Visualisasi Aliran Arus (Elektron)</span>
+                    </div>
+                </div>
+
+                <!-- Hint & Logic Explanation Card -->
+                <div class="card hint-card">
+                    <div class="card-header">
+                        <i class="fa-regular fa-lightbulb card-icon text-gold"></i>
+                        <h2>Petunjuk Logika Fisika</h2>
+                    </div>
+                    <div class="card-body">
+                        <p id="hint-text" class="hint-text">
+                            Pada <strong>Rangkaian Seri</strong>, hanya ada 1 jalur bagi arus untuk mengalir dari kutub positif ke kutub negatif. Melepas 1 lampu membuka jalur tersebut ($R \to \infty$) sehingga arus $I = 0$ di seluruh rangkaian.
+                        </p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center Stage: Circuit Interactive Graphic -->
+            <section class="stage-panel">
+                <div class="stage-header">
+                    <div class="stage-title">
+                        <i class="fa-solid fa-bolt text-green"></i>
+                        <span id="stage-name">Rangkaian Lampu Hias Seri</span>
+                    </div>
+                    <div class="stage-legend">
+                        <span class="legend-item"><span class="dot dot-on"></span> Menyala</span>
+                        <span class="legend-item"><span class="dot dot-off"></span> Padam</span>
+                        <span class="legend-item"><span class="dot dot-removed"></span> Dilepas</span>
+                        <span class="legend-item"><span class="dot dot-current"></span> Aliran Elektron</span>
+                    </div>
+                </div>
+
+                <!-- Interactive SVG Canvas for Schematic -->
+                <div id="circuit-container" class="circuit-container">
+                    <!-- PhET Left Component Palette (Visible in Sandbox Mode) -->
+                    <div id="phet-left-palette" class="phet-palette hidden">
+                        <button class="phet-scroll-btn" id="phet-scroll-up"><i class="fa-solid fa-chevron-up"></i></button>
+                        <div class="phet-palette-scroll" id="phet-palette-list">
+                            <div class="phet-item" data-add="battery" title="Baterai">
+                                <i class="fa-solid fa-car-battery phet-item-icon text-gold"></i>
+                                <span>Baterai</span>
+                            </div>
+                            <div class="phet-item" data-add="bulb" title="Lampu Utama">
+                                <i class="fa-regular fa-lightbulb phet-item-icon text-cyan"></i>
+                                <span>Lampu</span>
+                            </div>
+                            <div class="phet-item" data-add="resistor" title="Resistor (Hambatan)">
+                                <i class="fa-solid fa-bolt phet-item-icon text-gold"></i>
+                                <span>Resistor</span>
+                            </div>
+                            <div class="phet-item" data-add="switch" title="Saklar Pisau">
+                                <i class="fa-solid fa-toggle-on phet-item-icon text-green"></i>
+                                <span>Saklar</span>
+                            </div>
+                            <div class="phet-item" data-add="fuse" title="Sekring Pengaman">
+                                <i class="fa-solid fa-shield-halved phet-item-icon text-red"></i>
+                                <span>Sekring</span>
+                            </div>
+                            <div class="phet-item" data-add="paperclip" title="Klip Kertas (Konduktor Metal)">
+                                <i class="fa-solid fa-paperclip phet-item-icon text-cyan"></i>
+                                <span>Klip Kertas</span>
+                            </div>
+                            <div class="phet-item" data-add="coin" title="Koin Logam (Konduktor Metal)">
+                                <i class="fa-solid fa-coins phet-item-icon text-gold"></i>
+                                <span>Koin</span>
+                            </div>
+                            <div class="phet-item" data-add="pencil" title="Pensil Grafit (Hambatan Sedang)">
+                                <i class="fa-solid fa-pencil phet-item-icon text-gold"></i>
+                                <span>Pensil</span>
+                            </div>
+                            <div class="phet-item" data-add="eraser" title="Penghapus Karet (Isolator Listrik)">
+                                <i class="fa-solid fa-eraser phet-item-icon text-red"></i>
+                                <span>Penghapus</span>
+                            </div>
+                        </div>
+                        <button class="phet-scroll-btn" id="phet-scroll-down"><i class="fa-solid fa-chevron-down"></i></button>
+
+                        <div class="phet-view-toggle">
+                            <button id="btn-view-real" class="phet-toggle-btn active" title="Tampilan Realistis">
+                                <i class="fa-solid fa-image"></i> Real
+                            </button>
+                            <button id="btn-view-schematic" class="phet-toggle-btn" title="Diagram Simbol Skema IEEE">
+                                <i class="fa-solid fa-diagram-project"></i> Simbol
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Main SVG Canvas with Physics Blueprint Grid -->
+                    <svg id="circuit-svg" viewBox="0 0 900 600" preserveAspectRatio="xMidYMid meet">
+                        <defs>
+                            <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(0, 229, 255, 0.06)" stroke-width="1"/>
+                                <circle cx="40" cy="40" r="1.5" fill="rgba(0, 229, 255, 0.15)"/>
+                            </pattern>
+                            <radialGradient id="bulbGlowGold" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
+                                <stop offset="40%" stop-color="#ffeb3b" stop-opacity="0.9"/>
+                                <stop offset="100%" stop-color="#ffd700" stop-opacity="0"/>
+                            </radialGradient>
+                            <filter id="glow-gold" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur stdDeviation="8" result="blur" />
+                                <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                            <filter id="glow-wire" x="-30%" y="-30%" width="160%" height="160%">
+                                <feGaussianBlur stdDeviation="4" result="blur" />
+                                <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#grid-pattern)" />
+                    </svg>
+
+                    <!-- PhET Right Control Panel (Visible in Sandbox Mode) -->
+                    <div id="phet-right-panel" class="phet-panel hidden">
+                        <div class="phet-panel-box">
+                            <div class="phet-panel-header">
+                                <label class="phet-checkbox-label">
+                                    <input type="checkbox" id="phet-toggle-current" checked>
+                                    <strong>Show Current</strong>
+                                </label>
+                            </div>
+                            <div class="phet-radio-group">
+                                <label class="phet-radio-label">
+                                    <input type="radio" name="phetCurrentType" value="electrons" checked>
+                                    <span class="dot-electron"></span> Electrons
+                                </label>
+                                <label class="phet-radio-label">
+                                    <input type="radio" name="phetCurrentType" value="conventional">
+                                    <span class="dot-conventional"></span> Conventional (&rarr;)
+                                </label>
+                            </div>
+                            <hr class="phet-divider">
+                            <label class="phet-checkbox-label">
+                                <input type="checkbox" id="phet-toggle-labels" checked>
+                                <span>Labels (Nama)</span>
+                            </label>
+                            <label class="phet-checkbox-label">
+                                <input type="checkbox" id="phet-toggle-values" checked>
+                                <span>Values (Nilai V & &Omega;)</span>
+                            </label>
+                        </div>
+
+                        <div class="phet-panel-box instruments-box">
+                            <div class="instrument-title"><i class="fa-solid fa-gauge-high text-cyan"></i> Alat Ukur PhET</div>
+                            <div class="meter-readouts">
+                                <div class="readout-item">
+                                    <small>Voltmeter</small>
+                                    <span id="phet-v-val" class="text-gold">12.0 V</span>
+                                </div>
+                                <div class="readout-item">
+                                    <small>Ammeter</small>
+                                    <span id="phet-i-val" class="text-green">0.30 A</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Draggable Voltmeter Instrument with Dual Probes -->
+                    <div id="voltmeter-instrument" class="voltmeter-body hidden">
+                        <div class="vm-header"><i class="fa-solid fa-bolt text-gold"></i> VOLTMETER PhET</div>
+                        <div class="vm-screen"><span id="vm-display-text">0.0 V</span></div>
+                        <div class="vm-ports">
+                            <span class="vm-port red">+</span>
+                            <span class="vm-port black">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Draggable Red & Black Probe Handles -->
+                    <div id="probe-red" class="voltmeter-probe probe-red hidden" title="Probe Merah (+) - Tarik ke terminal sirkuit">
+                        <div class="probe-tip"></div>
+                        <span class="probe-label">+</span>
+                    </div>
+                    <div id="probe-black" class="voltmeter-probe probe-black hidden" title="Probe Hitam (-) - Tarik ke terminal sirkuit">
+                        <div class="probe-tip"></div>
+                        <span class="probe-label">-</span>
+                    </div>
+
+                    <!-- Orange Reset Circular Button (Bottom Right Corner) -->
+                    <button id="btn-phet-reset" class="phet-reset-btn hidden" title="Reset Lab - Bersihkan Kanvas Percobaan">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+
+                    <!-- Component Properties Context Menu Popup -->
+                    <div id="component-props-popover" class="props-popover hidden">
+                        <div class="props-header">
+                            <span id="prop-comp-title">Konfigurasi Komponen</span>
+                            <button id="btn-close-props" class="props-close">&times;</button>
+                        </div>
+                        <div class="props-body">
+                            <div class="prop-group" id="prop-voltage-group">
+                                <label>Tegangan (V): <strong id="prop-v-num">12.0 V</strong></label>
+                                <input type="range" id="prop-v-range" min="1" max="48" step="1" value="12">
+                            </div>
+                            <div class="prop-group" id="prop-resistance-group">
+                                <label>Hambatan (&Omega;): <strong id="prop-r-num">10.0 &Omega;</strong></label>
+                                <input type="range" id="prop-r-range" min="1" max="100" step="1" value="10">
+                            </div>
+                            <div class="props-actions">
+                                <button id="btn-prop-delete" class="btn-prop-danger"><i class="fa-solid fa-trash"></i> Hapus Komponen</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Tooltip Overlay -->
+                    <div id="circuit-tooltip" class="circuit-tooltip hidden"></div>
+                </div>
+
+                <!-- Sandbox Toolbar (visible in Sandbox Mode) -->
+                <div id="sandbox-tools" class="sandbox-tools hidden">
+                    <span class="tool-title"><i class="fa-solid fa-toolbox"></i> Alat Lab:</span>
+                    <button class="tool-btn" data-tool="add-series">
+                        <i class="fa-solid fa-plus"></i> Tambah Lampu Seri
+                    </button>
+                    <button class="tool-btn" data-tool="add-parallel">
+                        <i class="fa-solid fa-diagram-project"></i> Tambah Cabang Paralel
+                    </button>
+                    <button class="tool-btn" data-tool="toggle-switch">
+                        <i class="fa-solid fa-toggle-on text-green"></i> Saklar Utama
+                    </button>
+                    <button class="tool-btn" data-tool="change-voltage">
+                        <i class="fa-solid fa-car-battery text-gold"></i> Tegangan: <span id="sandbox-voltage-label">12V</span>
+                    </button>
+                    <button class="tool-btn warning" data-tool="remove-bulb">
+                        <i class="fa-solid fa-minus"></i> Hapus Lampu
+                    </button>
+                    <button class="tool-btn danger" data-tool="clear-all">
+                        <i class="fa-solid fa-trash"></i> Reset Lab
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Game Edukasi Logika Fisika &copy; 2026 - Rangkaian Arus Searah (DC) Lampu Hias. Didesain untuk Fisika SMA Kelas 12.</p>
+        </footer>
+    </div>
+
+    <!-- Victory / Feedback Modal Overlay -->
+    <div id="modal-victory" class="modal-overlay hidden">
+        <div class="modal-card victory-card">
+            <div class="victory-header">
+                <div class="star-rating">
+                    <i class="fa-solid fa-star star active"></i>
+                    <i class="fa-solid fa-star star active"></i>
+                    <i class="fa-solid fa-star star active"></i>
+                </div>
+                <h2 id="victory-title">Misi Berhasil Dituntaskan!</h2>
+            </div>
+            <div class="modal-body">
+                <p id="victory-message" class="victory-msg">
+                    Hebat! Kamu berhasil mengidentifikasi <strong>Lampu Pemutus Arus</strong> dengan tepat!
+                </p>
+                <div class="explanation-box">
+                    <h4><i class="fa-solid fa-graduation-cap"></i> Penjelasan Konsep Fisika:</h4>
+                    <p id="victory-explanation">
+                        Penjelasan detail mengenai Kirchhoff's Current Law & Hukum Ohm akan ditampilkan di sini.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-next-level" class="btn btn-primary">
+                    Lanjut ke Level Berikutnya <i class="fa-solid fa-arrow-right"></i>
+                </button>
+                <button id="btn-replay-level" class="btn btn-outline">
+                    Coba Lagi <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theory & Physics Formula Modal -->
+    <div id="modal-theory" class="modal-overlay hidden">
+        <div class="modal-card theory-card">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-book-bookmark text-gold"></i> Panduan Teori Rangkaian Listrik DC (Kelas 12)</h2>
+                <button id="btn-close-theory" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body theory-content">
+                <section class="theory-section">
+                    <h3>1. Rangkaian Seri (Pemutus Tunggal)</h3>
+                    <div class="theory-grid">
+                        <div>
+                            <p>Pada rangkaian seri, semua beban (lampu hias) dihubungkan berurutan dalam <strong>satu jalur tunggal</strong>.</p>
+                            <ul>
+                                <li><strong>Arus:</strong> <i>I</i><sub>total</sub> = <i>I</i><sub>1</sub> = <i>I</i><sub>2</sub> = <i>I</i><sub>3</sub> = ...</li>
+                                <li><strong>Tegangan:</strong> <i>V</i><sub>total</sub> = <i>V</i><sub>1</sub> + <i>V</i><sub>2</sub> + <i>V</i><sub>3</sub> + ...</li>
+                                <li><strong>Hambatan:</strong> <i>R</i><sub>eq</sub> = <i>R</i><sub>1</sub> + <i>R</i><sub>2</sub> + <i>R</i><sub>3</sub> + ...</li>
+                            </ul>
+                            <div class="highlight-box">
+                                🔑 <strong>Prinsip Pemutus Arus:</strong> Jika <em>satu saja</em> lampu dilepas atau putus, rangkaian menjadi TERBUKA (Open Circuit). Arus listrik langsung terhenti total (<i>I</i> = 0), sehingga SELURUH lampu padam.
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <hr class="divider">
+
+                <section class="theory-section">
+                    <h3>2. Rangkaian Paralel (Jalur Independen)</h3>
+                    <div class="theory-grid">
+                        <div>
+                            <p>Pada rangkaian paralel, tiap lampu memiliki <strong>cabang tersendiri</strong> yang terhubung langsung ke sumber tegangan.</p>
+                            <ul>
+                                <li><strong>Tegangan:</strong> <i>V</i><sub>total</sub> = <i>V</i><sub>1</sub> = <i>V</i><sub>2</sub> = <i>V</i><sub>3</sub> = ...</li>
+                                <li><strong>Arus Total:</strong> <i>I</i><sub>total</sub> = <i>I</i><sub>1</sub> + <i>I</i><sub>2</sub> + <i>I</i><sub>3</sub> + ... (Hukum I Kirchhoff)</li>
+                                <li><strong>Hambatan Ekuivalen:</strong> 1/<i>R</i><sub>eq</sub> = 1/<i>R</i><sub>1</sub> + 1/<i>R</i><sub>2</sub> + 1/<i>R</i><sub>3</sub></li>
+                            </ul>
+                            <div class="highlight-box">
+                                🔑 <strong>Prinsip Pemutus Arus:</strong> Melepas lampu pada salah satu cabang hanya menghentikan arus di cabang itu. Cabang lain TETAP MENYALA karena masih memiliki lup tertutup ke baterai!
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <hr class="divider">
+
+                <section class="theory-section">
+                    <h3>3. Rangkaian Campuran (Lampu Hias Dekoratif)</h3>
+                    <div class="theory-grid">
+                        <div>
+                            <p>Rangkaian campuran menggabungkan bagian Seri dan Paralel.</p>
+                            <p>Lampu yang dipasang pada <strong>Jalur Utama (Main Branch)</strong> sebelum percabangan bertindak sebagai <strong>"Master Cutout" / Pemutus Utama</strong>.</p>
+                            <p>Sementara lampu yang berada di dalam percabangan hanya bertindak sebagai <strong>Pemutus Lokal Cabang</strong>.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-understand" class="btn btn-primary">Paham, Kembali ke Game!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="game.js"></script>
+</body>
+</html>
